@@ -1,0 +1,5 @@
+name: NoAnyBoom
+version: '1.0'
+main: org.encinet.noAnyBoom.NoAnyBoom
+api-version: 1.18
+authors: [ Noctiro ]
