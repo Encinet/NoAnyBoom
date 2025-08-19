@@ -59,26 +59,10 @@ public class AcquisitionListener implements Listener {
     @EventHandler
     public void onPlayerCommand(PlayerCommandPreprocessEvent event) {
         String message = event.getMessage();
-        String lower = message.toLowerCase();
-
-        if (lower.contains("/give") || lower.contains("/minecraft:give")) {
-            for (String banned : BanUtils.BANNED_MATERIAL_SET) {
-                if (message.contains(banned)) {
-                    event.setCancelled(true);
-                    return;
-                }
-            }
-        } else if (lower.contains("/summon") || lower.contains("/minecraft:summon")) {
-            for (String banned : BanUtils.BANNED_ENTITY_SET) {
-                if (lower.contains(banned)) {
-                    event.setCancelled(true);
-                    return;
-                }
-            }
-        } else if (lower.contains("/setblock") || lower.contains("/minecraft:setblock") || lower.contains("/fill")
-                || lower.contains("/minecraft:fill") || lower.contains("//")) {
-            if (lower.contains("tnt")) {
+        for (String banned : BanUtils.BANNED_MATERIAL_SET) {
+            if (message.contains(banned)) {
                 event.setCancelled(true);
+                return;
             }
         }
     }
