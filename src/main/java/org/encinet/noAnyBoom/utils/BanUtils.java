@@ -7,8 +7,7 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.inventory.ItemStack;
 
 public class BanUtils {
-    public static final Set<String> BANNED_MATERIAL_SET = Set.of("tnt", "tnt_minecart", "end_crystal",
-            "witch_spawn_egg");
+    public static final Set<String> BANNED_MATERIAL_SET = Set.of("tnt", "tnt_minecart", "end_crystal");
     public static final Set<String> BANNED_ENTITY_SET = Set.of(
             "tnt",
             "tnt_minecart",
@@ -31,8 +30,7 @@ public class BanUtils {
     public static boolean isBannedMaterial(Material material) {
         return material == Material.TNT ||
                 material == Material.TNT_MINECART ||
-                material == Material.END_CRYSTAL ||
-                material == Material.WITCH_SPAWN_EGG;
+                material == Material.END_CRYSTAL;
     }
 
     public static boolean isBannedEntity(EntityType entityType) {

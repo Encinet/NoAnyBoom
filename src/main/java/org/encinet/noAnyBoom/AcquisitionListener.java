@@ -13,6 +13,7 @@ import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.encinet.noAnyBoom.utils.BanUtils;
+import org.encinet.noAnyBoom.utils.WarningUtils;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerItemHeldEvent;
@@ -36,6 +37,7 @@ public class AcquisitionListener implements Listener {
         ItemStack newItem = player.getInventory().getItem(event.getNewSlot());
         if (newItem != null && BanUtils.isBannedItem(newItem)) {
             player.getInventory().setItem(event.getNewSlot(), null);
+            WarningUtils.broadcastItemWarning(player, newItem.getType().name(), player.getLocation());
         }
     }
 
@@ -62,6 +64,14 @@ public class AcquisitionListener implements Listener {
         for (String banned : BanUtils.BANNED_MATERIAL_SET) {
             if (message.contains(banned)) {
                 event.setCancelled(true);
+                WarningUtils.broadcastCommandWarning(event.getPlayer(), message, event.getPlayer().getLocation());
+                return;
+            }
+        }
+        for (String banned : BanUtils.BANNED_ENTITY_SET) {
+            if (message.contains(banned)) {
+                event.setCancelled(true);
+                WarningUtils.broadcastCommandWarning(event.getPlayer(), message, event.getPlayer().getLocation());
                 return;
             }
         }
@@ -81,13 +91,21 @@ public class AcquisitionListener implements Listener {
         if (item != null && BanUtils.isBannedItem(item)) {
             event.setCancelled(true);
             event.setCurrentItem(null);
+
+            if (event.getWhoClicked() instanceof Player) {
+                Player player = (Player) event.getWhoClicked();
+                WarningUtils.broadcastItemWarning(player, item.getType().name(), event.getWhoClicked().getLocation());
+            }
         }
     }
 
     @EventHandler
     public void onCraftItem(CraftItemEvent event) {
-        if (BanUtils.isBannedItem(event.getCurrentItem())) {
+        ItemStack result = event.getCurrentItem();
+        if (result != null && BanUtils.isBannedItem(result)) {
             event.setCancelled(true);
+            Player player = (Player) event.getWhoClicked();
+            WarningUtils.broadcastItemWarning(player, result.getType().name(), event.getWhoClicked().getLocation());
         }
     }
 
@@ -97,10 +115,12 @@ public class AcquisitionListener implements Listener {
             return;
         }
 
+        Player player = (Player) event.getEntity();
         ItemStack item = event.getItem().getItemStack();
         if (item != null && BanUtils.isBannedItem(item)) {
             event.setCancelled(true);
             event.getItem().remove();
+            WarningUtils.broadcastItemWarning(player, item.getType().name(), event.getItem().getLocation());
         }
     }
 
@@ -109,6 +129,11 @@ public class AcquisitionListener implements Listener {
         ItemStack item = event.getCursor();
         if (item != null && BanUtils.isBannedItem(item)) {
             event.setCancelled(true);
+
+            if (event.getWhoClicked() instanceof Player) {
+                Player player = (Player) event.getWhoClicked();
+                WarningUtils.broadcastItemWarning(player, item.getType().name(), event.getWhoClicked().getLocation());
+            }
         }
     }
 
@@ -118,6 +143,7 @@ public class AcquisitionListener implements Listener {
         if (item != null && BanUtils.isBannedItem(item)) {
             event.setCancelled(true); // 取消丢弃事件
             event.getPlayer().getInventory().remove(item); // 清除玩家物品栏中的违规物品
+            WarningUtils.broadcastItemWarning(event.getPlayer(), item.getType().name(), event.getItemDrop().getLocation());
         }
     }
 }

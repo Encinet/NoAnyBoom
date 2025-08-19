@@ -11,6 +11,7 @@ public final class NoAnyBoom extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new DestructionPreventionListener(), this);
         getServer().getPluginManager().registerEvents(new ExplosionListener(), this);
         getServer().getPluginManager().registerEvents(new UsageListener(), this);
+        getServer().getPluginManager().registerEvents(new FireListener(), this);
         getLogger().info("NoAnyBoom Enable");
     }
 
