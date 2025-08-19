@@ -37,7 +37,7 @@ public class AcquisitionListener implements Listener {
         ItemStack newItem = player.getInventory().getItem(event.getNewSlot());
         if (newItem != null && BanUtils.isBannedItem(newItem)) {
             player.getInventory().setItem(event.getNewSlot(), null);
-            WarningUtils.broadcastItemWarning(player, newItem.getType().name(), player.getLocation());
+            WarningUtils.broadcastItemWarning(player, newItem.getType().name(), player);
         }
     }
 
@@ -64,14 +64,14 @@ public class AcquisitionListener implements Listener {
         for (String banned : BanUtils.BANNED_MATERIAL_SET) {
             if (message.contains(banned)) {
                 event.setCancelled(true);
-                WarningUtils.broadcastCommandWarning(event.getPlayer(), message, event.getPlayer().getLocation());
+                WarningUtils.broadcastCommandWarning(event.getPlayer(), message, event.getPlayer());
                 return;
             }
         }
         for (String banned : BanUtils.BANNED_ENTITY_SET) {
             if (message.contains(banned)) {
                 event.setCancelled(true);
-                WarningUtils.broadcastCommandWarning(event.getPlayer(), message, event.getPlayer().getLocation());
+                WarningUtils.broadcastCommandWarning(event.getPlayer(), message, event.getPlayer());
                 return;
             }
         }
@@ -94,7 +94,7 @@ public class AcquisitionListener implements Listener {
 
             if (event.getWhoClicked() instanceof Player) {
                 Player player = (Player) event.getWhoClicked();
-                WarningUtils.broadcastItemWarning(player, item.getType().name(), event.getWhoClicked().getLocation());
+                WarningUtils.broadcastItemWarning(player, item.getType().name(), player);
             }
         }
     }
@@ -105,7 +105,7 @@ public class AcquisitionListener implements Listener {
         if (result != null && BanUtils.isBannedItem(result)) {
             event.setCancelled(true);
             Player player = (Player) event.getWhoClicked();
-            WarningUtils.broadcastItemWarning(player, result.getType().name(), event.getWhoClicked().getLocation());
+            WarningUtils.broadcastItemWarning(player, result.getType().name(), player);
         }
     }
 
@@ -120,7 +120,7 @@ public class AcquisitionListener implements Listener {
         if (item != null && BanUtils.isBannedItem(item)) {
             event.setCancelled(true);
             event.getItem().remove();
-            WarningUtils.broadcastItemWarning(player, item.getType().name(), event.getItem().getLocation());
+            WarningUtils.broadcastItemWarning(player, item.getType().name(), player);
         }
     }
 
@@ -132,7 +132,7 @@ public class AcquisitionListener implements Listener {
 
             if (event.getWhoClicked() instanceof Player) {
                 Player player = (Player) event.getWhoClicked();
-                WarningUtils.broadcastItemWarning(player, item.getType().name(), event.getWhoClicked().getLocation());
+                WarningUtils.broadcastItemWarning(player, item.getType().name(), player);
             }
         }
     }
@@ -143,7 +143,7 @@ public class AcquisitionListener implements Listener {
         if (item != null && BanUtils.isBannedItem(item)) {
             event.setCancelled(true); // 取消丢弃事件
             event.getPlayer().getInventory().remove(item); // 清除玩家物品栏中的违规物品
-            WarningUtils.broadcastItemWarning(event.getPlayer(), item.getType().name(), event.getItemDrop().getLocation());
+            WarningUtils.broadcastItemWarning(event.getPlayer(), item.getType().name(), event.getPlayer());
         }
     }
 }

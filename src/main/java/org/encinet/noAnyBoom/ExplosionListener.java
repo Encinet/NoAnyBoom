@@ -16,7 +16,7 @@ public class ExplosionListener implements Listener {
         EntityType type = event.getEntityType();
         if (BanUtils.isBannedEntity(type)) {
             event.setCancelled(true);
-            WarningUtils.broadcastEntityWarning(null, type.name(), event.getLocation());
+            WarningUtils.broadcastEntityWarning(null, type.name(), event.getEntity());
         }
     }
 
@@ -26,7 +26,7 @@ public class ExplosionListener implements Listener {
         if (BanUtils.isBannedEntity(type)) {
             event.setCancelled(true);
             // 生成事件没有玩家对象，使用控制台名
-            WarningUtils.broadcastEntityWarning(null, type.name(), event.getLocation());
+            WarningUtils.broadcastEntityWarning(null, type.name(), event.getEntity());
         }
     }
 
@@ -35,7 +35,7 @@ public class ExplosionListener implements Listener {
         EntityType type = event.getEntityType();
         if (BanUtils.isBannedEntity(type)) {
             event.setCancelled(true);
-            WarningUtils.broadcastEntityWarning(null, type.name(), event.getLocation());
+            WarningUtils.broadcastEntityWarning(null, type.name(), event.getEntity());
         }
     }
 }

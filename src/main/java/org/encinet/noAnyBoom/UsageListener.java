@@ -21,7 +21,7 @@ public class UsageListener implements Listener {
         Material material = event.getBlockPlaced().getType();
         if (BanUtils.isBannedMaterial(material)) {
             event.setCancelled(true);
-            WarningUtils.broadcastBlockWarning(player, material.name(), event.getBlock().getLocation());
+            WarningUtils.broadcastBlockWarning(player, material.name(), player);
 
             ItemStack main = player.getInventory().getItemInMainHand();
             ItemStack off = player.getInventory().getItemInOffHand();
@@ -40,7 +40,7 @@ public class UsageListener implements Listener {
         EntityType entityType = event.getEntity().getType();
         if (BanUtils.isBannedEntity(entityType)) {
             event.setCancelled(true);
-            WarningUtils.broadcastEntityWarning(player, entityType.name(), event.getEntity().getLocation());
+            WarningUtils.broadcastEntityWarning(player, entityType.name(), player);
 
             ItemStack main = player.getInventory().getItemInMainHand();
             ItemStack off = player.getInventory().getItemInOffHand();
@@ -56,12 +56,12 @@ public class UsageListener implements Listener {
     @EventHandler
     public void onBlockExplode(BlockExplodeEvent event) {
         event.setCancelled(true);
-        WarningUtils.broadcastBlockWarning(null, event.getBlock().getType().name(), event.getBlock().getLocation());
+        WarningUtils.broadcastBlockWarning(null, event.getBlock().getType().name(), event.getBlock());
     }
 
     @EventHandler
     public void onEntityExplode(EntityExplodeEvent event) {
         event.setCancelled(true);
-        WarningUtils.broadcastEntityWarning(null, event.getEntityType().name(), event.getEntity().getLocation());
+        WarningUtils.broadcastEntityWarning(null, event.getEntityType().name(), event.getEntity());
     }
 }

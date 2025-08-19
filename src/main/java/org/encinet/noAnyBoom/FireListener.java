@@ -10,6 +10,6 @@ public class FireListener implements Listener {
     public void onBlockBurn(BlockBurnEvent event) {
         event.setCancelled(true);
         // 方块燃烧事件没有玩家对象，使用null
-        WarningUtils.broadcastBlockWarning(null, event.getBlock().getType().name(), event.getBlock().getLocation());
+        WarningUtils.broadcastBlockWarning(null, event.getBlock().getType().name(), event.getBlock());
     }
 }

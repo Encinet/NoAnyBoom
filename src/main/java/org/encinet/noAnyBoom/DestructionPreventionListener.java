@@ -18,7 +18,7 @@ public class DestructionPreventionListener implements Listener {
         if (BanUtils.isBannedMaterial(blockType)) {
             event.setCancelled(true);
             event.getBlock().setType(Material.AIR);
-            WarningUtils.broadcastBlockWarning(event.getPlayer(), blockType.name(), event.getBlock().getLocation());
+            WarningUtils.broadcastBlockWarning(event.getPlayer(), blockType.name(), event.getPlayer());
         }
     }
 
@@ -34,7 +34,7 @@ public class DestructionPreventionListener implements Listener {
             if (event.getEntity() instanceof Player) {
                 damager = (Player) event.getEntity();
             }
-            WarningUtils.broadcastEntityWarning(damager, entityType.name(), event.getEntity().getLocation());
+            WarningUtils.broadcastEntityWarning(damager, entityType.name(), damager != null ? damager : event.getEntity().getLocation());
         }
     }
 }
