@@ -28,7 +28,7 @@ public class WarningUtils {
         int y = location.getBlockY();
         int z = location.getBlockZ();
         
-        String tpCommand = String.format("/tp @s %d %d %d", x, y, z);
+        String tpCommand = String.format("/minecraft:tp @s %d %d %d", x, y, z);
         String coords = String.format("Location %s (%d,%d,%d)", worldName, x, y, z);
         
         // 使用 MiniMessage 创建带点击和悬停事件的组件
