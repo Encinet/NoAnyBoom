@@ -2,6 +2,7 @@ package org.encinet.noAnyBoom;
 
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.inventory.CraftItemEvent;
@@ -31,7 +32,7 @@ public class AcquisitionListener implements Listener {
         }
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerItemHeld(PlayerItemHeldEvent event) {
         Player player = event.getPlayer();
         ItemStack newItem = player.getInventory().getItem(event.getNewSlot());
@@ -41,24 +42,24 @@ public class AcquisitionListener implements Listener {
         }
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerJoin(PlayerJoinEvent event) {
         removeBannedItems(event.getPlayer().getInventory());
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.MONITOR)
     public void onInventoryClose(InventoryCloseEvent event) {
         removeBannedItems(event.getInventory());
         removeBannedItems(event.getPlayer().getInventory());
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.MONITOR)
     public void onInventoryOpen(InventoryOpenEvent event) {
         removeBannedItems(event.getInventory());
         removeBannedItems(event.getPlayer().getInventory());
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerCommand(PlayerCommandPreprocessEvent event) {
         String message = event.getMessage();
         for (String banned : BanUtils.BANNED_MATERIAL_SET) {
@@ -77,7 +78,7 @@ public class AcquisitionListener implements Listener {
         }
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.MONITOR)
     public void onInventoryClick(InventoryClickEvent event) {
         // 只处理点击物品操作
         if (event.getAction() != InventoryAction.PICKUP_ALL &&
@@ -99,7 +100,7 @@ public class AcquisitionListener implements Listener {
         }
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.MONITOR)
     public void onCraftItem(CraftItemEvent event) {
         ItemStack result = event.getCurrentItem();
         if (result != null && BanUtils.isBannedItem(result)) {
@@ -109,7 +110,7 @@ public class AcquisitionListener implements Listener {
         }
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.MONITOR)
     public void onPickupItem(EntityPickupItemEvent event) {
         if (!(event.getEntity() instanceof Player)) {
             return;
@@ -124,7 +125,7 @@ public class AcquisitionListener implements Listener {
         }
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.MONITOR)
     public void onInventoryCreative(InventoryCreativeEvent event) {
         ItemStack item = event.getCursor();
         if (item != null && BanUtils.isBannedItem(item)) {
@@ -137,7 +138,7 @@ public class AcquisitionListener implements Listener {
         }
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerDropItem(PlayerDropItemEvent event) {
         ItemStack item = event.getItemDrop().getItemStack();
         if (item != null && BanUtils.isBannedItem(item)) {

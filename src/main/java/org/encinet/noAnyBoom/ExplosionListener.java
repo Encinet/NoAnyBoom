@@ -3,6 +3,7 @@ package org.encinet.noAnyBoom;
 import org.bukkit.Location;
 import org.bukkit.entity.EntityType;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
@@ -13,7 +14,7 @@ import org.encinet.noAnyBoom.utils.WarningUtils;
 
 public class ExplosionListener implements Listener {
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.MONITOR)
     public void onEntityExplode(EntityExplodeEvent event) {
         EntityType type = event.getEntityType();
         if (BanUtils.isBannedEntity(type)) {
@@ -26,7 +27,7 @@ public class ExplosionListener implements Listener {
         }
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.MONITOR)
     public void onCreatureSpawn(CreatureSpawnEvent event) {
         EntityType type = event.getEntityType();
         if (BanUtils.isBannedEntity(type)) {
@@ -36,7 +37,7 @@ public class ExplosionListener implements Listener {
         }
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.MONITOR)
     public void onEntitySpawn(EntitySpawnEvent event) {
         EntityType type = event.getEntityType();
         if (BanUtils.isBannedEntity(type)) {

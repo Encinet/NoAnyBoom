@@ -5,6 +5,7 @@ import org.bukkit.Material;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
@@ -14,7 +15,7 @@ import org.encinet.noAnyBoom.utils.WarningUtils;
 
 public class DestructionPreventionListener implements Listener {
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.MONITOR)
     public void onBlockBreak(BlockBreakEvent event) {
         Material blockType = event.getBlock().getType();
         if (BanUtils.isBannedMaterial(blockType)) {
@@ -28,7 +29,7 @@ public class DestructionPreventionListener implements Listener {
         }
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.MONITOR)
     public void onEntityDamage(EntityDamageEvent event) {
         EntityType entityType = event.getEntity().getType();
         if (BanUtils.isBannedEntity(entityType)) {

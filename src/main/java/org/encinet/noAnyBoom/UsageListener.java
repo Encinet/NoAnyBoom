@@ -5,6 +5,7 @@ import org.bukkit.Material;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockExplodeEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
@@ -17,7 +18,7 @@ import org.encinet.noAnyBoom.utils.WarningUtils;
 
 public class UsageListener implements Listener {
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.MONITOR)
     public void onBlockPlace(BlockPlaceEvent event) {
         Player player = event.getPlayer();
         Material material = event.getBlockPlaced().getType();
@@ -36,7 +37,7 @@ public class UsageListener implements Listener {
         }
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.MONITOR)
     public void onEntityPlace(EntityPlaceEvent event) {
         Player player = event.getPlayer();
         EntityType entityType = event.getEntity().getType();
@@ -55,7 +56,7 @@ public class UsageListener implements Listener {
         }
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.MONITOR)
     public void onBlockExplode(BlockExplodeEvent event) {
         event.setCancelled(true);
         WarningUtils.broadcastBlockWarning(null, event.getBlock().getType().name(), event.getBlock());
@@ -63,7 +64,7 @@ public class UsageListener implements Listener {
         ScanUtils.scanAndHandleBannedBlocks(event.getBlock().getLocation(), 5, null);
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.MONITOR)
     public void onEntityExplode(EntityExplodeEvent event) {
         event.setCancelled(true);
         Location entityLocation = event.getEntity().getLocation();
