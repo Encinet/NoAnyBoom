@@ -34,9 +34,9 @@ public class BanUtils {
     }
 
     public static boolean isBannedEntity(EntityType entityType) {
-        return entityType == EntityType.PRIMED_TNT ||
-                entityType == EntityType.MINECART_TNT ||
-                entityType == EntityType.ENDER_CRYSTAL ||
+        return entityType == EntityType.TNT ||
+                entityType == EntityType.TNT_MINECART ||
+                entityType == EntityType.END_CRYSTAL ||
                 entityType == EntityType.FIREBALL ||
                 entityType == EntityType.SMALL_FIREBALL ||
                 entityType == EntityType.WITHER ||

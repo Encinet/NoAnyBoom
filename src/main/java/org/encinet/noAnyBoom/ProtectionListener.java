@@ -24,7 +24,7 @@ public class ProtectionListener implements Listener {
         EntityType type = event.getEntityType();
         if (BanUtils.isBannedEntity(type)) {
             event.setCancelled(true);
-            WarningUtils.broadcast("exploded", null, type.name(), event.getEntity().getLocation());
+            WarningUtils.broadcast("exploded", "Environment", type.name(), event.getEntity().getLocation());
             ScanUtils.scanAndHandleBannedBlocks(event.getEntity().getLocation(), 5, null);
         }
     }
@@ -34,7 +34,7 @@ public class ProtectionListener implements Listener {
         EntityType type = event.getEntityType();
         if (BanUtils.isBannedEntity(type)) {
             event.setCancelled(true);
-            WarningUtils.broadcast("spawned", null, type.name(), event.getEntity().getLocation());
+            WarningUtils.broadcast("spawned", "Environment", type.name(), event.getEntity().getLocation());
             ScanUtils.scanAndHandleBannedBlocks(event.getEntity().getLocation(), 5, null);
         }
     }
@@ -43,7 +43,7 @@ public class ProtectionListener implements Listener {
     @EventHandler(priority = EventPriority.LOWEST)
     public void onBlockBurn(BlockBurnEvent event) {
         event.setCancelled(true);
-        WarningUtils.broadcast("burned", null, event.getBlock().getType().name(), event.getBlock().getLocation());
+        WarningUtils.broadcast("burned", "Environment", event.getBlock().getType().name(), event.getBlock().getLocation());
     }
 
     // UsageListener
@@ -68,7 +68,7 @@ public class ProtectionListener implements Listener {
                 WarningUtils.broadcast("placed", player, entityType.name(), player.getLocation());
                 removeBannedItemsFromPlayer(player);
             } else {
-                WarningUtils.broadcast("placed", null, entityType.name(), event.getEntity().getLocation());
+                WarningUtils.broadcast("placed", "Environment", entityType.name(), event.getEntity().getLocation());
             }
         }
     }
@@ -76,8 +76,20 @@ public class ProtectionListener implements Listener {
     @EventHandler(priority = EventPriority.LOWEST)
     public void onBlockExplode(BlockExplodeEvent event) {
         event.setCancelled(true);
-        WarningUtils.broadcast("exploded", null, event.getBlock().getType().name(), event.getBlock().getLocation());
+        WarningUtils.broadcast("exploded", "Environment", event.getBlock().getType().name(), event.getBlock().getLocation());
         ScanUtils.scanAndHandleBannedBlocks(event.getBlock().getLocation(), 5, null);
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onTNTPrime(TNTPrimeEvent event) {
+        event.setCancelled(true);
+        if (event.getPrimingEntity() instanceof Player player) {
+            WarningUtils.broadcast("primed", player, "TNT", event.getBlock().getLocation());
+            ScanUtils.scanAndHandleBannedBlocks(event.getBlock().getLocation(), 5, player);
+        } else {
+            WarningUtils.broadcast("primed", event.getCause().name(), "TNT", event.getBlock().getLocation());
+            ScanUtils.scanAndHandleBannedBlocks(event.getBlock().getLocation(), 5, null);
+        }
     }
 
     // AcquisitionListener
@@ -216,7 +228,7 @@ public class ProtectionListener implements Listener {
                     damager = (Player) damageEvent.getDamager();
                 }
             }
-            WarningUtils.broadcast("damaged", damager, entityType.name(), event.getEntity().getLocation());
+            WarningUtils.broadcast("damaged", damager != null ? damager : "Environment", entityType.name(), event.getEntity().getLocation());
         }
     }
 
@@ -225,7 +237,7 @@ public class ProtectionListener implements Listener {
     public void onBlockDispense(BlockDispenseEvent event) {
         if (BanUtils.isBannedItem(event.getItem())) {
             event.setCancelled(true);
-            WarningUtils.broadcast("dispensed", null, event.getItem().getType().name(), event.getBlock().getLocation());
+            WarningUtils.broadcast("dispensed", "Dispenser", event.getItem().getType().name(), event.getBlock().getLocation());
         }
     }
 

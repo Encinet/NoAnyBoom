@@ -29,16 +29,22 @@ public class WarningUtils {
         return false;
     }
 
-    public static void broadcast(String action, Player player, String subject, Object target) {
-        String playerName = (player != null) ? player.getName() : "System";
-        String cooldownKey = action + ":" + playerName + ":" + subject;
+    public static void broadcast(String action, Object source, String subject, Object target) {
+        String sourceName = "System";
+        if (source instanceof Player player) {
+            sourceName = player.getName();
+        } else if (source instanceof String s && !s.isEmpty()) {
+            sourceName = s;
+        }
+
+        String cooldownKey = action + ":" + sourceName + ":" + subject;
 
         if (isOnCooldown(cooldownKey)) {
             return;
         }
 
         TagResolver tags = TagResolver.builder()
-                .tag("player", Tag.inserting(Component.text(playerName)))
+                .tag("player", Tag.inserting(Component.text(sourceName)))
                 .tag("action", Tag.inserting(Component.text(action)))
                 .tag("subject", Tag.inserting(Component.text(subject)))
                 .build();
@@ -48,6 +54,46 @@ public class WarningUtils {
         if (target != null) {
             message = message.append(Component.text(" @ ", NamedTextColor.DARK_GRAY))
                     .append(createTeleportComponent(target));
+        }
+
+        Bukkit.getServer().broadcast(message);
+    }
+
+    public static void broadcastScanSummary(Object source, Map<String, Integer> bannedBlocksFound, Location center) {
+        String sourceName = "System";
+        if (source instanceof Player player) {
+            sourceName = player.getName();
+        } else if (source instanceof String s && !s.isEmpty()) {
+            sourceName = s;
+        }
+
+        StringBuilder subjectBuilder = new StringBuilder();
+        boolean first = true;
+        for (Map.Entry<String, Integer> entry : bannedBlocksFound.entrySet()) {
+            if (!first) {
+                subjectBuilder.append(", ");
+            }
+            subjectBuilder.append(entry.getKey()).append("×").append(entry.getValue());
+            first = false;
+        }
+        String subject = subjectBuilder.toString();
+
+        String cooldownKey = "scan:" + sourceName + ":" + subject;
+        if (isOnCooldown(cooldownKey)) {
+            return;
+        }
+
+        TagResolver tags = TagResolver.builder()
+                .tag("player", Tag.inserting(Component.text(sourceName)))
+                .tag("action", Tag.inserting(Component.text("triggered a scan and found")))
+                .tag("subject", Tag.inserting(Component.text(subject)))
+                .build();
+
+        Component message = MINI_MESSAGE.deserialize(WARNING_TEMPLATE, tags);
+
+        if (center != null) {
+            message = message.append(Component.text(" @ ", NamedTextColor.DARK_GRAY))
+                    .append(createTeleportComponent(center));
         }
 
         Bukkit.getServer().broadcast(message);
