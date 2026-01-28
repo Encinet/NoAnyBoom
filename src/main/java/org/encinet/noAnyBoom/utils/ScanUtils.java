@@ -26,7 +26,7 @@ public class ScanUtils {
      */
     public static void scanAndHandleBannedBlocks(Location center, int radius, Player player) {
         Map<Material, Integer> bannedBlocksFound = new HashMap<>();
-        scanRecursive(center, radius, player, bannedBlocksFound);
+        scanRecursive(center, radius, bannedBlocksFound);
 
         // 发送扫描汇总警告
         if (!bannedBlocksFound.isEmpty()) {
@@ -93,73 +93,36 @@ public class ScanUtils {
      *
      * @param center            中心位置
      * @param radius            扫描半径
-     * @param player            玩家对象（可为null）
      * @param bannedBlocksFound 发现的违禁方块统计
      */
-    private static void scanRecursive(Location center, int radius, Player player,
-            Map<Material, Integer> bannedBlocksFound) {
+    private static void scanRecursive(Location center, int radius, Map<Material, Integer> bannedBlocksFound) {
         World world = center.getWorld();
-        if (world == null)
-            return;
+        if (world == null) return;
 
-        // 使用队列进行BFS和集合记录已访问坐标（使用字符串键避免Location对象开销）
         Queue<Location> queue = new LinkedList<>();
-        Set<String> visited = new HashSet<>();
+        Set<Location> visited = new HashSet<>();
 
-        // 重用Location对象以减少内存分配
-        Location tempLoc = center.clone();
+        queue.add(center);
+        visited.add(center);
 
-        // 初始添加中心点周围的所有方块
-        int centerX = center.getBlockX();
-        int centerY = center.getBlockY();
-        int centerZ = center.getBlockZ();
-
-        for (int x = centerX - radius; x <= centerX + radius; x++) {
-            for (int y = centerY - radius; y <= centerY + radius; y++) {
-                for (int z = centerZ - radius; z <= centerZ + radius; z++) {
-                    tempLoc.setX(x);
-                    tempLoc.setY(y);
-                    tempLoc.setZ(z);
-                    queue.add(tempLoc.clone());
-
-                    // 预标记为已访问以避免重复入队
-                    visited.add(x + "," + y + "," + z);
-                }
-            }
-        }
-
-        // BFS处理队列中的位置
         while (!queue.isEmpty()) {
             Location current = queue.poll();
-            int currentX = current.getBlockX();
-            int currentY = current.getBlockY();
-            int currentZ = current.getBlockZ();
 
-            Block block = current.getBlock();
-            Material material = block.getType();
+            for (int x = -radius; x <= radius; x++) {
+                for (int y = -radius; y <= radius; y++) {
+                    for (int z = -radius; z <= radius; z++) {
+                        Location newLocation = current.clone().add(x, y, z);
+                        if (visited.contains(newLocation)) continue;
 
-            // 检查是否为违禁方块
-            if (BanUtils.isBannedMaterial(material)) {
-                // 移除违禁方块
-                block.setType(Material.AIR);
-                // 统计发现的违禁方块
-                bannedBlocksFound.put(material, bannedBlocksFound.getOrDefault(material, 0) + 1);
+                        Block block = newLocation.getBlock();
+                        Material material = block.getType();
 
-                // 添加周围5格内的方块到队列进行进一步扫描
-                for (int dx = -5; dx <= 5; dx++) {
-                    for (int dy = -5; dy <= 5; dy++) {
-                        for (int dz = -5; dz <= 5; dz++) {
-                            int nx = currentX + dx;
-                            int ny = currentY + dy;
-                            int nz = currentZ + dz;
-
-                            String coordKey = nx + "," + ny + "," + nz;
-                            if (!visited.contains(coordKey)) {
-                                visited.add(coordKey);
-                                Location neighbor = new Location(world, nx, ny, nz);
-                                queue.add(neighbor);
-                            }
+                        if (BanUtils.isBannedMaterial(material)) {
+                            block.setType(Material.AIR);
+                            bannedBlocksFound.put(material, bannedBlocksFound.getOrDefault(material, 0) + 1);
+                            queue.add(newLocation);
                         }
+                        visited.add(newLocation);
                     }
                 }
             }
