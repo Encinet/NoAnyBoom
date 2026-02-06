@@ -132,6 +132,10 @@ public class ProtectionListener implements Listener {
     @EventHandler(priority = EventPriority.LOWEST)
     public void onPlayerCommand(PlayerCommandPreprocessEvent event) {
         String message = event.getMessage().toLowerCase();
+        if (!isDangerousCommand(message)) {
+            return;
+        }
+
         for (String banned : BanUtils.BANNED_MATERIAL_SET) {
             if (message.contains(banned.toLowerCase())) {
                 event.setCancelled(true);
@@ -146,6 +150,21 @@ public class ProtectionListener implements Listener {
                 return;
             }
         }
+    }
+
+    private boolean isDangerousCommand(String command) {
+        // Vanilla commands
+        if (command.startsWith("/give")) return true;
+        if (command.startsWith("/summon")) return true;
+        if (command.startsWith("/setblock")) return true;
+        if (command.startsWith("/fill")) return true;
+        if (command.startsWith("/minecraft:give")) return true;
+        if (command.startsWith("/minecraft:summon")) return true;
+        if (command.startsWith("/minecraft:setblock")) return true;
+        if (command.startsWith("/minecraft:fill")) return true;
+
+        // WorldEdit commands (all start with / or //)
+        return command.startsWith("//");
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
