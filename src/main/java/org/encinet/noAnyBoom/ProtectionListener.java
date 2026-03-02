@@ -75,6 +75,7 @@ public class ProtectionListener implements Listener {
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onBlockExplode(BlockExplodeEvent event) {
+        if (event.getBlock().getType() == Material.AIR) return;
         event.setCancelled(true);
         WarningUtils.broadcast("exploded", "Environment", event.getBlock().getType().name(), event.getBlock().getLocation());
         ScanUtils.scanAndHandleBannedBlocks(event.getBlock().getLocation(), 5, null);
