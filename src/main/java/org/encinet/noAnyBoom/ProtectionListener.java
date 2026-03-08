@@ -1,5 +1,6 @@
 package org.encinet.noAnyBoom;
 
+import org.bukkit.ExplosionResult;
 import org.bukkit.Material;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
@@ -76,7 +77,8 @@ public class ProtectionListener implements Listener {
     @EventHandler(priority = EventPriority.LOWEST)
     public void onBlockExplode(BlockExplodeEvent event) {
         // Allow wind burst (AIR explosions with no blocks destroyed)
-        if (event.getBlock().getType() == Material.AIR && event.blockList().isEmpty()) return;
+        ExplosionResult explosionResult = event.getExplosionResult();
+        if (event.getBlock().getType() == Material.AIR && (explosionResult == ExplosionResult.KEEP || explosionResult == ExplosionResult.TRIGGER_BLOCK)) return;
 
         event.setCancelled(true);
         WarningUtils.broadcast("exploded", "Environment", event.getBlock().getType().name(), event.getBlock().getLocation());
