@@ -22,7 +22,7 @@ public class ViolationTracker {
             long minutes = BAN_BASE_MINUTES * (1L << (bans - 1)); // 30 * 2^(bans-1)
             String banReason = "Banned by NoAnyBoom for repeated violations";
             player.ban(banReason, Duration.ofMinutes(minutes), "NoAnyBoom", true);
-            WarningUtils.broadcast("has been banned for " + minutes + " minutes", "NoAnyBoom", player.getName(), null);
+            WarningUtils.broadcast("has been banned for " + minutes + " minutes", player, "repeated violations", null);
         }
     }
 
