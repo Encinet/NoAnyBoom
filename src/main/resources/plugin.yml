@@ -3,3 +3,9 @@ version: '1.0'
 main: org.encinet.noAnyBoom.NoAnyBoom
 api-version: 1.18
 authors: [ Noctiro ]
+
+commands:
+  nab:
+    description: NoAnyBoom admin command
+    usage: /nab <list|info <player>|reset <player> [violations|bans|all]>
+    permission: noanyboom.admin

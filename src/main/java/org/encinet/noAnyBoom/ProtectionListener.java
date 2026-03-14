@@ -15,6 +15,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.encinet.noAnyBoom.utils.BanUtils;
 import org.encinet.noAnyBoom.utils.ScanUtils;
+import org.encinet.noAnyBoom.utils.ViolationTracker;
 import org.encinet.noAnyBoom.utils.WarningUtils;
 
 public class ProtectionListener implements Listener {
@@ -56,6 +57,7 @@ public class ProtectionListener implements Listener {
             event.setCancelled(true);
             WarningUtils.broadcast("placed", player, material.name(), player.getLocation());
             removeBannedItemsFromPlayer(player);
+            ViolationTracker.record(player);
         }
     }
 
@@ -68,6 +70,7 @@ public class ProtectionListener implements Listener {
             if (player != null) {
                 WarningUtils.broadcast("placed", player, entityType.name(), player.getLocation());
                 removeBannedItemsFromPlayer(player);
+                ViolationTracker.record(player);
             } else {
                 WarningUtils.broadcast("placed", "Environment", entityType.name(), event.getEntity().getLocation());
             }
@@ -91,6 +94,7 @@ public class ProtectionListener implements Listener {
         if (event.getPrimingEntity() instanceof Player player) {
             WarningUtils.broadcast("primed", player, "TNT", event.getBlock().getLocation());
             ScanUtils.scanAndHandleBannedBlocks(event.getBlock().getLocation(), 5, player);
+            ViolationTracker.record(player);
         } else {
             WarningUtils.broadcast("primed", event.getCause().name(), "TNT", event.getBlock().getLocation());
             ScanUtils.scanAndHandleBannedBlocks(event.getBlock().getLocation(), 5, null);
@@ -145,6 +149,7 @@ public class ProtectionListener implements Listener {
             if (message.contains(banned.toLowerCase())) {
                 event.setCancelled(true);
                 WarningUtils.broadcast("used command", event.getPlayer(), event.getMessage(), event.getPlayer().getLocation());
+                ViolationTracker.record(event.getPlayer());
                 return;
             }
         }
@@ -152,6 +157,7 @@ public class ProtectionListener implements Listener {
             if (message.contains(banned.toLowerCase())) {
                 event.setCancelled(true);
                 WarningUtils.broadcast("used command", event.getPlayer(), event.getMessage(), event.getPlayer().getLocation());
+                ViolationTracker.record(event.getPlayer());
                 return;
             }
         }
@@ -180,6 +186,7 @@ public class ProtectionListener implements Listener {
             event.setCurrentItem(null);
             if (event.getWhoClicked() instanceof Player player) {
                 WarningUtils.broadcast("clicked", player, item.getType().name(), player.getLocation());
+                ViolationTracker.record(player);
             }
         }
     }
@@ -191,6 +198,7 @@ public class ProtectionListener implements Listener {
             event.setCancelled(true);
             if (event.getWhoClicked() instanceof Player player) {
                 WarningUtils.broadcast("crafted", player, result.getType().name(), player.getLocation());
+                ViolationTracker.record(player);
             }
         }
     }

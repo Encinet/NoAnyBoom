@@ -8,6 +8,7 @@ public final class NoAnyBoom extends JavaPlugin {
     public void onEnable() {
         // Plugin startup logic
         getServer().getPluginManager().registerEvents(new ProtectionListener(), this);
+        getCommand("nab").setExecutor(new Command());
         getLogger().info("NoAnyBoom Enable");
     }
 
