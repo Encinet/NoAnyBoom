@@ -14,6 +14,7 @@ public class ViolationTracker {
     private static final Map<UUID, Integer> banCounts = new ConcurrentHashMap<>();
 
     public static void record(Player player) {
+        if (player.hasPermission("noanyboom.bypass")) return;
         int count = violations.merge(player.getUniqueId(), 1, Integer::sum);
         if (count >= THRESHOLD) {
             violations.remove(player.getUniqueId());

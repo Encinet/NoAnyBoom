@@ -8,4 +8,10 @@ commands:
   nab:
     description: NoAnyBoom admin command
     usage: /nab <list|info <player>|reset <player> [violations|bans|all]>
-    permission: noanyboom.admin
+permissions:
+  noanyboom.admin:
+    description: Access to /nab command
+    default: op
+  noanyboom.bypass:
+    description: Exempt from violation tracking and bans
+    default: false
