@@ -1,9 +1,13 @@
 package org.encinet.noAnyBoom;
 
 import org.bukkit.ExplosionResult;
+import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
+
+import java.util.Arrays;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -20,14 +24,23 @@ import org.encinet.noAnyBoom.utils.WarningUtils;
 
 public class ProtectionListener implements Listener {
 
+    private static final String[] DANGEROUS_COMMAND_PREFIXES = {
+            "/give", "/summon", "/setblock", "/fill",
+            "/minecraft:give", "/minecraft:summon", "/minecraft:setblock", "/minecraft:fill"
+    };
+
     // ExplosionListener
     @EventHandler(priority = EventPriority.LOWEST)
     public void onEntityExplode(EntityExplodeEvent event) {
         EntityType type = event.getEntityType();
         if (BanUtils.isBannedEntity(type)) {
             event.setCancelled(true);
+            Player damager = event.getEntity() instanceof Player ? (Player) event.getEntity() : null;
             WarningUtils.broadcast("exploded", "Environment", type.name(), event.getEntity().getLocation());
-            ScanUtils.scanAndHandleBannedBlocks(event.getEntity().getLocation(), 5, null);
+            ScanUtils.scanAndHandleBannedBlocks(event.getEntity().getLocation(), 5, damager);
+            if (damager != null) {
+                ViolationTracker.record(damager);
+            }
         }
     }
 
@@ -36,16 +49,22 @@ public class ProtectionListener implements Listener {
         EntityType type = event.getEntityType();
         if (BanUtils.isBannedEntity(type)) {
             event.setCancelled(true);
-            WarningUtils.broadcast("spawned", "Environment", type.name(), event.getEntity().getLocation());
-            ScanUtils.scanAndHandleBannedBlocks(event.getEntity().getLocation(), 5, null);
+            Player cause = event.getEntity() instanceof Player ? (Player) event.getEntity() : null;
+            WarningUtils.broadcast("spawned", cause != null ? cause : "Environment", type.name(), event.getEntity().getLocation());
+            ScanUtils.scanAndHandleBannedBlocks(event.getEntity().getLocation(), 5, cause);
+            if (cause != null) {
+                ViolationTracker.record(cause);
+            }
         }
     }
 
     // FireListener
     @EventHandler(priority = EventPriority.LOWEST)
     public void onBlockBurn(BlockBurnEvent event) {
-        event.setCancelled(true);
-        WarningUtils.broadcast("burned", "Environment", event.getBlock().getType().name(), event.getBlock().getLocation());
+        if (BanUtils.isBannedMaterial(event.getBlock().getType())) {
+            event.setCancelled(true);
+            WarningUtils.broadcast("burned", "Environment", event.getBlock().getType().name(), event.getBlock().getLocation());
+        }
     }
 
     // UsageListener
@@ -55,9 +74,8 @@ public class ProtectionListener implements Listener {
         Material material = event.getBlockPlaced().getType();
         if (BanUtils.isBannedMaterial(material)) {
             event.setCancelled(true);
-            WarningUtils.broadcast("placed", player, material.name(), player.getLocation());
+            recordViolation(player, "placed", material.name(), player.getLocation());
             removeBannedItemsFromPlayer(player);
-            ViolationTracker.record(player);
         }
     }
 
@@ -68,9 +86,8 @@ public class ProtectionListener implements Listener {
         if (BanUtils.isBannedEntity(entityType)) {
             event.setCancelled(true);
             if (player != null) {
-                WarningUtils.broadcast("placed", player, entityType.name(), player.getLocation());
+                recordViolation(player, "placed", entityType.name(), player.getLocation());
                 removeBannedItemsFromPlayer(player);
-                ViolationTracker.record(player);
             } else {
                 WarningUtils.broadcast("placed", "Environment", entityType.name(), event.getEntity().getLocation());
             }
@@ -79,22 +96,33 @@ public class ProtectionListener implements Listener {
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onBlockExplode(BlockExplodeEvent event) {
-        // Allow wind burst (AIR explosions with no blocks destroyed)
         ExplosionResult explosionResult = event.getExplosionResult();
         if (event.getBlock().getType() == Material.AIR && (explosionResult == ExplosionResult.KEEP || explosionResult == ExplosionResult.TRIGGER_BLOCK)) return;
 
+        Player cause = null;
+        if (event.getBlock().getType() == Material.TNT) {
+            for (Entity e : event.getBlock().getWorld().getNearbyEntities(event.getBlock().getLocation(), 2, 2, 2)) {
+                if (e instanceof Player) {
+                    cause = (Player) e;
+                    break;
+                }
+            }
+        }
+
         event.setCancelled(true);
-        WarningUtils.broadcast("exploded", "Environment", event.getBlock().getType().name(), event.getBlock().getLocation());
-        ScanUtils.scanAndHandleBannedBlocks(event.getBlock().getLocation(), 5, null);
+        WarningUtils.broadcast("exploded", cause != null ? cause : "Environment", event.getBlock().getType().name(), event.getBlock().getLocation());
+        ScanUtils.scanAndHandleBannedBlocks(event.getBlock().getLocation(), 5, cause);
+        if (cause != null) {
+            ViolationTracker.record(cause);
+        }
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onTNTPrime(TNTPrimeEvent event) {
         event.setCancelled(true);
         if (event.getPrimingEntity() instanceof Player player) {
-            WarningUtils.broadcast("primed", player, "TNT", event.getBlock().getLocation());
+            recordViolation(player, "primed", "TNT", event.getBlock().getLocation());
             ScanUtils.scanAndHandleBannedBlocks(event.getBlock().getLocation(), 5, player);
-            ViolationTracker.record(player);
         } else {
             WarningUtils.broadcast("primed", event.getCause().name(), "TNT", event.getBlock().getLocation());
             ScanUtils.scanAndHandleBannedBlocks(event.getBlock().getLocation(), 5, null);
@@ -117,7 +145,7 @@ public class ProtectionListener implements Listener {
         ItemStack newItem = player.getInventory().getItem(event.getNewSlot());
         if (BanUtils.isBannedItem(newItem)) {
             player.getInventory().setItem(event.getNewSlot(), null);
-            WarningUtils.broadcast("held", player, newItem.getType().name(), player.getLocation());
+            recordViolation(player, "held", newItem.getType().name(), player.getLocation());
         }
     }
 
@@ -148,34 +176,25 @@ public class ProtectionListener implements Listener {
         for (String banned : BanUtils.BANNED_MATERIAL_SET) {
             if (message.contains(banned.toLowerCase())) {
                 event.setCancelled(true);
-                WarningUtils.broadcast("used command", event.getPlayer(), event.getMessage(), event.getPlayer().getLocation());
-                ViolationTracker.record(event.getPlayer());
+                recordViolation(event.getPlayer(), "used command", event.getMessage(), event.getPlayer().getLocation());
                 return;
             }
         }
         for (String banned : BanUtils.BANNED_ENTITY_SET) {
             if (message.contains(banned.toLowerCase())) {
                 event.setCancelled(true);
-                WarningUtils.broadcast("used command", event.getPlayer(), event.getMessage(), event.getPlayer().getLocation());
-                ViolationTracker.record(event.getPlayer());
+                recordViolation(event.getPlayer(), "used command", event.getMessage(), event.getPlayer().getLocation());
                 return;
             }
         }
     }
 
     private boolean isDangerousCommand(String command) {
-        // Vanilla commands
-        if (command.startsWith("/give")) return true;
-        if (command.startsWith("/summon")) return true;
-        if (command.startsWith("/setblock")) return true;
-        if (command.startsWith("/fill")) return true;
-        if (command.startsWith("/minecraft:give")) return true;
-        if (command.startsWith("/minecraft:summon")) return true;
-        if (command.startsWith("/minecraft:setblock")) return true;
-        if (command.startsWith("/minecraft:fill")) return true;
-
-        // WorldEdit commands (all start with / or //)
-        return command.startsWith("//");
+        if (command.startsWith("//")) return true;
+        for (String prefix : DANGEROUS_COMMAND_PREFIXES) {
+            if (command.startsWith(prefix)) return true;
+        }
+        return false;
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
@@ -185,8 +204,7 @@ public class ProtectionListener implements Listener {
             event.setCancelled(true);
             event.setCurrentItem(null);
             if (event.getWhoClicked() instanceof Player player) {
-                WarningUtils.broadcast("clicked", player, item.getType().name(), player.getLocation());
-                ViolationTracker.record(player);
+                recordViolation(player, "clicked", item.getType().name(), player.getLocation());
             }
         }
     }
@@ -197,8 +215,7 @@ public class ProtectionListener implements Listener {
         if (BanUtils.isBannedItem(result)) {
             event.setCancelled(true);
             if (event.getWhoClicked() instanceof Player player) {
-                WarningUtils.broadcast("crafted", player, result.getType().name(), player.getLocation());
-                ViolationTracker.record(player);
+                recordViolation(player, "crafted", result.getType().name(), player.getLocation());
             }
         }
     }
@@ -210,7 +227,7 @@ public class ProtectionListener implements Listener {
             if (BanUtils.isBannedItem(item)) {
                 event.setCancelled(true);
                 event.getItem().remove();
-                WarningUtils.broadcast("picked up", player, item.getType().name(), player.getLocation());
+                recordViolation(player, "picked up", item.getType().name(), player.getLocation());
             }
         }
     }
@@ -221,7 +238,7 @@ public class ProtectionListener implements Listener {
         if (BanUtils.isBannedItem(item)) {
             event.setCancelled(true);
             if (event.getWhoClicked() instanceof Player player) {
-                WarningUtils.broadcast("used creative", player, item.getType().name(), player.getLocation());
+                recordViolation(player, "used creative", item.getType().name(), player.getLocation());
             }
         }
     }
@@ -232,7 +249,7 @@ public class ProtectionListener implements Listener {
         if (BanUtils.isBannedItem(item)) {
             event.setCancelled(true);
             event.getPlayer().getInventory().remove(item);
-            WarningUtils.broadcast("dropped", event.getPlayer(), item.getType().name(), event.getPlayer().getLocation());
+            recordViolation(event.getPlayer(), "dropped", item.getType().name(), event.getPlayer().getLocation());
         }
     }
 
@@ -243,7 +260,7 @@ public class ProtectionListener implements Listener {
         if (BanUtils.isBannedMaterial(blockType)) {
             event.setCancelled(true);
             event.getBlock().setType(Material.AIR);
-            WarningUtils.broadcast("broke", event.getPlayer(), blockType.name(), event.getBlock().getLocation());
+            recordViolation(event.getPlayer(), "broke", blockType.name(), event.getBlock().getLocation());
             ScanUtils.scanAndHandleBannedBlocks(event.getBlock().getLocation(), 5, event.getPlayer());
         }
     }
@@ -261,6 +278,9 @@ public class ProtectionListener implements Listener {
                 }
             }
             WarningUtils.broadcast("damaged", damager != null ? damager : "Environment", entityType.name(), event.getEntity().getLocation());
+            if (damager != null) {
+                ViolationTracker.record(damager);
+            }
         }
     }
 
@@ -269,7 +289,17 @@ public class ProtectionListener implements Listener {
     public void onBlockDispense(BlockDispenseEvent event) {
         if (BanUtils.isBannedItem(event.getItem())) {
             event.setCancelled(true);
-            WarningUtils.broadcast("dispensed", "Dispenser", event.getItem().getType().name(), event.getBlock().getLocation());
+            Player dispenserPlayer = null;
+            for (Entity e : event.getBlock().getWorld().getNearbyEntities(event.getBlock().getLocation(), 3, 3, 3)) {
+                if (e instanceof Player) {
+                    dispenserPlayer = (Player) e;
+                    break;
+                }
+            }
+            WarningUtils.broadcast("dispenser tried to dispense", dispenserPlayer != null ? dispenserPlayer : "Dispenser", event.getItem().getType().name(), event.getBlock().getLocation());
+            if (dispenserPlayer != null) {
+                ViolationTracker.record(dispenserPlayer);
+            }
         }
     }
 
@@ -278,12 +308,17 @@ public class ProtectionListener implements Listener {
         ItemStack item = event.getItem();
         if (BanUtils.isBannedItem(item)) {
             event.setCancelled(true);
-            WarningUtils.broadcast("interacted with", event.getPlayer(), item.getType().name(), event.getPlayer().getLocation());
+            recordViolation(event.getPlayer(), "interacted with", item.getType().name(), event.getPlayer().getLocation());
         }
     }
 
     private void removeBannedItemsFromPlayer(Player player) {
         player.getInventory().setItemInMainHand(null);
         player.getInventory().setItemInOffHand(null);
+    }
+
+    private void recordViolation(Player player, String action, String target, Location loc) {
+        WarningUtils.broadcast(action, player, target, loc);
+        ViolationTracker.record(player);
     }
 }

@@ -6,14 +6,10 @@ public final class NoAnyBoom extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        // Plugin startup logic
         getServer().getPluginManager().registerEvents(new ProtectionListener(), this);
-        getCommand("nab").setExecutor(new Command());
-        getLogger().info("NoAnyBoom Enable");
-    }
 
-    @Override
-    public void onDisable() {
-        // Plugin shutdown logic
+        NabCommand.register(getLifecycleManager());
+
+        getLogger().info("NoAnyBoom Enable");
     }
 }
