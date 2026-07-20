@@ -29,7 +29,7 @@ public class WarningUtils {
         return false;
     }
 
-    public static void broadcast(String action, Object source, String subject, Object target) {
+    public static void log(String action, Object source, String subject, Object target) {
         String sourceName = "System";
         if (source instanceof Player player) {
             sourceName = player.getName();
@@ -56,7 +56,7 @@ public class WarningUtils {
                     .append(createTeleportComponent(target));
         }
 
-        Bukkit.getServer().broadcast(message);
+        Bukkit.getConsoleSender().sendMessage(message);
     }
 
     private static Component createTeleportComponent(Object target) {

@@ -8,6 +8,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockExplodeEvent;
+import org.bukkit.event.block.BlockSpreadEvent;
 import org.bukkit.event.block.TNTPrimeEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
@@ -26,7 +27,7 @@ public class ProtectionListener implements Listener {
         }
 
         event.setCancelled(true);
-        WarningUtils.broadcast("spawn blocked", "Environment", type.name(), event.getLocation());
+        WarningUtils.log("spawn blocked", "Environment", type.name(), event.getLocation());
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
@@ -37,7 +38,7 @@ public class ProtectionListener implements Listener {
         }
 
         event.setCancelled(true);
-        WarningUtils.broadcast("explosion blocked", "Environment", type.name(), event.getEntity().getLocation());
+        WarningUtils.log("explosion blocked", "Environment", type.name(), event.getEntity().getLocation());
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
@@ -48,7 +49,7 @@ public class ProtectionListener implements Listener {
         }
 
         event.setCancelled(true);
-        WarningUtils.broadcast("explosion blocked", "Environment", type.name(), event.getLocation());
+        WarningUtils.log("explosion blocked", "Environment", type.name(), event.getLocation());
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
@@ -59,7 +60,18 @@ public class ProtectionListener implements Listener {
 
         event.setCancelled(true);
         Material source = event.getExplodedBlockState().getType();
-        WarningUtils.broadcast("explosion blocked", "Environment", source.name(), event.getBlock().getLocation());
+        WarningUtils.log("explosion blocked", "Environment", source.name(), event.getBlock().getLocation());
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onBlockSpread(BlockSpreadEvent event) {
+        Material source = event.getSource().getType();
+        Material spread = event.getNewState().getType();
+        if (!isFire(source) && !isFire(spread)) {
+            return;
+        }
+
+        event.setCancelled(true);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
@@ -67,11 +79,11 @@ public class ProtectionListener implements Listener {
         event.setCancelled(true);
 
         if (event.getPrimingEntity() instanceof Player player) {
-            WarningUtils.broadcast("priming blocked", player, Material.TNT.name(), event.getBlock().getLocation());
+            WarningUtils.log("priming blocked", player, Material.TNT.name(), event.getBlock().getLocation());
             return;
         }
 
-        WarningUtils.broadcast("priming blocked", event.getCause().name(), Material.TNT.name(), event.getBlock().getLocation());
+        WarningUtils.log("priming blocked", event.getCause().name(), Material.TNT.name(), event.getBlock().getLocation());
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
@@ -92,5 +104,9 @@ public class ProtectionListener implements Listener {
         ExplosionResult result = event.getExplosionResult();
         return event.getExplodedBlockState().getType() == Material.AIR
                 && (result == ExplosionResult.KEEP || result == ExplosionResult.TRIGGER_BLOCK);
+    }
+
+    private boolean isFire(Material material) {
+        return material == Material.FIRE || material == Material.SOUL_FIRE;
     }
 }
