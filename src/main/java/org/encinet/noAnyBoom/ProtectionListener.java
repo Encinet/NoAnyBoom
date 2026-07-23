@@ -2,20 +2,24 @@ package org.encinet.noAnyBoom;
 
 import org.bukkit.ExplosionResult;
 import org.bukkit.Material;
+import org.bukkit.Tag;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockState;
+import org.bukkit.block.data.type.Bed;
+import org.bukkit.damage.DamageType;
 import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockExplodeEvent;
-import org.bukkit.event.block.BlockSpreadEvent;
-import org.bukkit.event.block.TNTPrimeEvent;
+import org.bukkit.event.block.BlockIgniteEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.EntitySpawnEvent;
 import org.bukkit.event.entity.ExplosionPrimeEvent;
+import org.bukkit.event.hanging.HangingBreakEvent;
+import org.bukkit.tag.DamageTypeTags;
 import org.encinet.noAnyBoom.utils.ProtectionRules;
-import org.encinet.noAnyBoom.utils.WarningUtils;
 
 public class ProtectionListener implements Listener {
 
@@ -27,86 +31,96 @@ public class ProtectionListener implements Listener {
         }
 
         event.setCancelled(true);
-        WarningUtils.log("spawn blocked", "Environment", type.name(), event.getLocation());
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onExplosionPrime(ExplosionPrimeEvent event) {
-        EntityType type = event.getEntityType();
-        if (!ProtectionRules.isExplosionBlocked(type)) {
-            return;
-        }
-
-        event.setCancelled(true);
-        WarningUtils.log("explosion blocked", "Environment", type.name(), event.getEntity().getLocation());
+        event.setFire(false);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onEntityExplode(EntityExplodeEvent event) {
-        EntityType type = event.getEntityType();
-        if (!ProtectionRules.isExplosionBlocked(type)) {
-            return;
+        if (destroysBlocks(event.getExplosionResult())) {
+            event.blockList().clear();
         }
-
-        event.setCancelled(true);
-        WarningUtils.log("explosion blocked", "Environment", type.name(), event.getLocation());
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onBlockExplode(BlockExplodeEvent event) {
-        if (isNonDestructiveWindBurst(event)) {
-            return;
+        if (!event.isCancelled() && destroysBlocks(event.getExplosionResult())) {
+            event.blockList().clear();
         }
 
-        event.setCancelled(true);
-        Material source = event.getExplodedBlockState().getType();
-        WarningUtils.log("explosion blocked", "Environment", source.name(), event.getBlock().getLocation());
+        restoreExplodedSource(event.getExplodedBlockState());
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    public void onBlockSpread(BlockSpreadEvent event) {
-        Material source = event.getSource().getType();
-        Material spread = event.getNewState().getType();
-        if (!isFire(source) && !isFire(spread)) {
-            return;
+    public void onBlockIgnite(BlockIgniteEvent event) {
+        if (event.getCause() == BlockIgniteEvent.IgniteCause.EXPLOSION) {
+            event.setCancelled(true);
         }
-
-        event.setCancelled(true);
-    }
-
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    public void onTNTPrime(TNTPrimeEvent event) {
-        event.setCancelled(true);
-
-        if (event.getPrimingEntity() instanceof Player player) {
-            WarningUtils.log("priming blocked", player, Material.TNT.name(), event.getBlock().getLocation());
-            return;
-        }
-
-        WarningUtils.log("priming blocked", event.getCause().name(), Material.TNT.name(), event.getBlock().getLocation());
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onEntityDamage(EntityDamageEvent event) {
-        if (event.getEntityType() == EntityType.END_CRYSTAL) {
+        EntityDamageEvent.DamageCause cause = event.getCause();
+        DamageType damageType = event.getDamageSource().getDamageType();
+        if (cause == EntityDamageEvent.DamageCause.BLOCK_EXPLOSION
+                || cause == EntityDamageEvent.DamageCause.ENTITY_EXPLOSION
+                || isExplosionDamage(damageType)) {
+            event.setDamage(0);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onHangingBreak(HangingBreakEvent event) {
+        if (event.getCause() == HangingBreakEvent.RemoveCause.EXPLOSION) {
             event.setCancelled(true);
-            event.getEntity().remove();
+        }
+    }
+
+    private boolean destroysBlocks(ExplosionResult result) {
+        return result == ExplosionResult.DESTROY || result == ExplosionResult.DESTROY_WITH_DECAY;
+    }
+
+    private boolean isExplosionDamage(DamageType damageType) {
+        return (DamageTypeTags.IS_EXPLOSION != null && DamageTypeTags.IS_EXPLOSION.isTagged(damageType))
+                || damageType.equals(DamageType.EXPLOSION)
+                || damageType.equals(DamageType.PLAYER_EXPLOSION)
+                || damageType.equals(DamageType.BAD_RESPAWN_POINT)
+                || damageType.equals(DamageType.FIREWORKS)
+                || damageType.equals(DamageType.WIND_CHARGE);
+    }
+
+    private void restoreExplodedSource(BlockState source) {
+        Block sourceBlock = source.getBlock();
+        if (!sourceBlock.getType().isAir()) {
             return;
         }
 
-        if (event.getCause() == EntityDamageEvent.DamageCause.BLOCK_EXPLOSION
-                || event.getCause() == EntityDamageEvent.DamageCause.ENTITY_EXPLOSION) {
-            event.setCancelled(true);
+        Material material = source.getType();
+        if (material == Material.RESPAWN_ANCHOR) {
+            source.update(true, false);
+            return;
         }
-    }
 
-    private boolean isNonDestructiveWindBurst(BlockExplodeEvent event) {
-        ExplosionResult result = event.getExplosionResult();
-        return event.getExplodedBlockState().getType() == Material.AIR
-                && (result == ExplosionResult.KEEP || result == ExplosionResult.TRIGGER_BLOCK);
-    }
+        if (!Tag.BEDS.isTagged(material) || !(source.getBlockData() instanceof Bed bed)) {
+            return;
+        }
 
-    private boolean isFire(Material material) {
-        return material == Material.FIRE || material == Material.SOUL_FIRE;
+        Block otherHalf = sourceBlock.getRelative(
+                bed.getPart() == Bed.Part.HEAD ? bed.getFacing().getOppositeFace() : bed.getFacing()
+        );
+        if (!otherHalf.getType().isAir()) {
+            return;
+        }
+
+        bed.setOccupied(false);
+        Bed otherData = (Bed) bed.clone();
+        otherData.setPart(bed.getPart() == Bed.Part.HEAD ? Bed.Part.FOOT : Bed.Part.HEAD);
+
+        source.setBlockData(bed);
+        source.update(true, false);
+        otherHalf.setBlockData(otherData, false);
     }
 }

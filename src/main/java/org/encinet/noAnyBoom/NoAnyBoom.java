@@ -7,7 +7,5 @@ public final class NoAnyBoom extends JavaPlugin {
     @Override
     public void onEnable() {
         getServer().getPluginManager().registerEvents(new ProtectionListener(), this);
-
-        getLogger().info("NoAnyBoom Enable");
     }
 }

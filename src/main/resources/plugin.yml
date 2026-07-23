@@ -1,6 +1,0 @@
-name: NoAnyBoom
-version: '1.0'
-main: org.encinet.noAnyBoom.NoAnyBoom
-api-version: 1.18
-description: Blocks dangerous spawns, explosions, and fire spread.
-authors: [ Noctiro ]
